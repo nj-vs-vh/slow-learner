@@ -8,26 +8,26 @@ class LearntType(ABC):
 
 
 @dataclass(frozen=True)
-class LearntLiteralType(LearntType):
+class LLiteral(LearntType):
     """Literal type with a single possible value; See https://peps.python.org/pep-0586/ for details"""
 
     value: Any
 
 
 @dataclass(frozen=True)
-class LearntSimpleType(LearntType):
+class LType(LearntType):
     """Simple, opaque type, either built-in or custom"""
 
     type_: Type[Any]
 
 
 @dataclass
-class LearntUnionType(LearntType):
+class LUnion(LearntType):
     union_members: list[LearntType]
 
 
 @dataclass(frozen=True)
-class LearntTupleType(LearntType):
+class LTuple(LearntType):
     """Inhomogenious, fixed size tuples, e.g. tuple[int, int, str]"""
 
     item_types: list[LearntType]

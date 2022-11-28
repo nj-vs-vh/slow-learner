@@ -2,7 +2,7 @@ import logging
 from enum import Enum
 from typing import Any, Optional, Type
 
-from .learnt_types import LearntLiteralType, LearntSimpleType, LearntTupleType, LearntType, LearntUnionType
+from .learnt_types import LLiteral, LType, LTuple, LearntType, LUnion
 from .subtyping import is_subtype
 
 logger = logging.getLogger(__name__)
@@ -15,10 +15,10 @@ class TypeLearner:
 
     def learn_variable_type(self, var: Any, prevent_literals: bool = False) -> LearntType:
         if not prevent_literals and isinstance(var, (int, str, bytes, bool, Enum)) or var is None:
-            return LearntLiteralType(value=var)
+            return LLiteral(value=var)
         if isinstance(var, tuple):
-            return LearntTupleType(item_types=[self.learn_variable_type(item, prevent_literals=True) for item in var])
-        return LearntSimpleType(type_=type(var))
+            return LTuple(item_types=[self.learn_variable_type(item, prevent_literals=True) for item in var])
+        return LType(type_=type(var))
 
     def union_learnt_types(self, lt1: LearntType, lt2: LearntType) -> LearntType:
         if lt1 == lt2:
@@ -27,23 +27,23 @@ class TypeLearner:
             return lt2
         if is_subtype(lt2, lt1):
             return lt1
-        return LearntUnionType([lt1, lt2])
+        return LUnion([lt1, lt2])
 
     def postprocess_learnt_type(self, lt: LearntType) -> LearntType:
         # generalizing too large literal types
-        if isinstance(lt, LearntUnionType):
-            literal_members: list[LearntLiteralType] = []
+        if isinstance(lt, LUnion):
+            literal_members: list[LLiteral] = []
             other_members: list[LearntType] = []
             for member in lt.union_members:
-                if isinstance(member, LearntLiteralType):
+                if isinstance(member, LLiteral):
                     literal_members.append(member)
                 else:
                     other_members.append(member)
             if len(literal_members) > self.max_literal_type_size:
-                simple_type_members = [LearntSimpleType(type(lm.value)) for lm in literal_members]
-                lt = LearntUnionType(simple_type_members + other_members)
+                simple_type_members = [LType(type(lm.value)) for lm in literal_members]
+                lt = LUnion(simple_type_members + other_members)
         # simplifying trivial unions (Union[str] -> str)
-        if isinstance(lt, LearntUnionType) and len(lt.union_members) == 1:
+        if isinstance(lt, LUnion) and len(lt.union_members) == 1:
             lt = lt.union_members[0]
         return lt
 
