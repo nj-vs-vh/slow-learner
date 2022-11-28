@@ -21,7 +21,7 @@ class LType(LearntType):
     type_: Type[Any]
 
 
-@dataclass
+@dataclass(frozen=True)
 class LUnion(LearntType):
     member_types: list[LearntType]
 
