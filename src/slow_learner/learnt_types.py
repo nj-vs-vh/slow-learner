@@ -1,4 +1,4 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any, Type
 
@@ -23,7 +23,7 @@ class LType(LearntType):
 
 @dataclass
 class LUnion(LearntType):
-    union_members: list[LearntType]
+    member_types: list[LearntType]
 
 
 @dataclass(frozen=True)
