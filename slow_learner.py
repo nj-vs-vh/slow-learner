@@ -1,7 +1,11 @@
 from typing import Any, Optional, Type
+import logging
 from enum import Enum
 from dataclasses import dataclass
 from abc import ABC
+
+
+logger = logging.getLogger(__name__)
 
 
 class LearntType(ABC):
@@ -64,11 +68,19 @@ def learn_variable_type(var: Any, prevent_literals: bool = False) -> LearntType:
 
 
 def union_learnt_types(lt1: LearntType, lt2: LearntType) -> LearntType:
+    if lt1 == lt2:
+        return lt1
+    if is_subtype(lt1, lt2):
+        return lt2
+    if is_subtype(lt2, lt1):
+        return lt1
     return LearntUnionType([lt1, lt2])
 
 
 def is_subtype(maybe_sub: LearntType, maybe_super: LearntType) -> bool:
     try:
+        if maybe_sub == maybe_super:
+            return True
         if isinstance(maybe_sub, LearntSimpleType) and isinstance(maybe_super, LearntSimpleType):
             return maybe_sub.type_ != maybe_super.type_ and issubclass(maybe_sub.type_, maybe_super.type_)
         if isinstance(maybe_sub, LearntLiteralType) and isinstance(maybe_super, LearntSimpleType):
@@ -78,10 +90,12 @@ def is_subtype(maybe_sub: LearntType, maybe_super: LearntType) -> bool:
                 is_subtype(sub_item_type, super_item_type)
                 for sub_item_type, super_item_type in zip(maybe_sub.item_types, maybe_super.item_types)
             )
+        if isinstance(maybe_sub, LearntUnionType):
+            return all(is_subtype(member, maybe_super) for member in maybe_sub.union_members)
         if isinstance(maybe_super, LearntUnionType):
             return any(is_subtype(maybe_sub, member) for member in maybe_super.union_members)
     except Exception:
-        pass
+        logger.exception("Error checking subtype")
     return False
 
 
