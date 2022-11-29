@@ -54,7 +54,7 @@ class CustomSub2(CustomBase):
             False,
         ),
         pytest.param(
-            LTuple([LLiteral(1), LLiteral(3), LLiteral(True), LLiteral('2')]),
+            LTuple([LLiteral(1), LLiteral(3), LLiteral(True), LLiteral("2")]),
             LTuple([LType(int), LType(int), LType(bool), LType(str)]),
             True,
             id="tuple of literals is a subtype of tuple of their types",

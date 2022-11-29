@@ -1,5 +1,5 @@
-import logging
 import itertools
+import logging
 from enum import Enum
 from typing import Any, Optional, cast
 
@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 class TypeLearner:
     def __init__(self, max_literal_type_size: int = 10) -> None:
-        self.result: Optional[LearntType] = None
+        self.learnt_type: Optional[LearntType] = None
         self.max_literal_type_size = max_literal_type_size
 
     def _learn_variable_type(self, var: Any) -> LearntType:
@@ -99,32 +99,8 @@ class TypeLearner:
 
     def observe(self, value: Any) -> None:
         lt = self._learn_variable_type(value)
-        if self.result is None:
-            self.result = lt
+        if self.learnt_type is None:
+            self.learnt_type = lt
         else:
-            self.result = self._union_learnt_types(self.result, lt)
-        self.result = self._postprocess_learnt_type(self.result)
-        print(self.result)
-        print()
-
-
-if __name__ == "__main__":
-    tl = TypeLearner()
-
-    # class Custom:
-    #     pass
-
-    # tl.observe(1)
-    # tl.observe(Custom())
-    # tl.observe(3.1415)
-    # # tl.observe("hello")
-    # for i in range(15):
-    #     tl.observe(i)
-
-    tl.observe((1, 2, 3))
-    tl.observe((2, 3, 4))
-
-    class SubInt(int):
-        pass
-
-    tl.observe((SubInt(3), SubInt(2), SubInt(5)))
+            self.learnt_type = self._union_learnt_types(self.learnt_type, lt)
+        self.learnt_type = self._postprocess_learnt_type(self.learnt_type)
