@@ -93,16 +93,42 @@ class CustomList(list):
             id="union's members are all subtypes of a simple type",
         ),
         # collections
-        pytest.param(LCollection(list, LType(int)), LCollection(list, LType(float)), True),
-        pytest.param(LCollection(CustomList, LType(int)), LCollection(list, LType(int)), True),
-        pytest.param(LCollection(CustomList, LType(int)), LCollection(list, LType(float)), True),
-        pytest.param(LCollection(CustomList, LType(float)), LCollection(list, LType(int)), False),
+        pytest.param(
+            LCollection(list, LType(int)),
+            LCollection(list, LType(float)),
+            False,
+            id="collections are never subtyped due to invariance",
+        ),
+        pytest.param(
+            LCollection(CustomList, LType(int)),
+            LCollection(list, LType(int)),
+            False,
+            id="collections are never subtyped due to invariance",
+        ),
+        pytest.param(
+            LCollection(CustomList, LType(int)),
+            LCollection(list, LType(float)),
+            False,
+            id="collections are never subtyped due to invariance",
+        ),
+        pytest.param(
+            LCollection(CustomList, LType(float)),
+            LCollection(list, LType(int)),
+            False,
+            id="collections are never subtyped due to invariance",
+        ),
         pytest.param(
             LCollection(list, LUnion([LLiteral(3), LLiteral("hi")])),
             LCollection(list, LUnion([LType(int), LType(str)])),
-            True,
+            False,
+            id="collections are never subtyped due to invariance",
         ),
-        pytest.param(LCollection(list, LUnion([LType(int), LType(str)])), LCollection(set, LType(int)), False),
+        pytest.param(
+            LCollection(list, LUnion([LType(int), LType(str)])),
+            LCollection(set, LType(int)),
+            False,
+            id="collections are never subtyped due to invariance",
+        ),
     ],
 )
 def test_is_subtype(lt1: LearntType, lt2: LearntType, expected_result: bool):

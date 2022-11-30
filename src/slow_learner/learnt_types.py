@@ -1,5 +1,5 @@
 from abc import ABC
-from collections.abc import Collection
+from collections.abc import Collection, Mapping
 from dataclasses import dataclass
 from typing import Any, Type
 
@@ -74,3 +74,26 @@ class LCollection(LearntType):
 
     def __str__(self) -> str:
         return f"{self.collection_type.__qualname__}[{self.item_type}]"
+
+
+@dataclass
+class LMapping(LearntType):
+    """Simple mapping type with two type parameters, like dict[int, bool] or TTLCache[str, float]"""
+
+    mapping_type: Type[Mapping]
+    key_type: LearntType
+    value_type: LearntType
+
+
+@dataclass
+class LTypedDictMissingKey(LearntType):
+    """Special type only allowed as a possible value for LTypedDict to mark not required key"""
+
+    pass
+
+
+@dataclass
+class LTypedDict(LearntType):
+    """TypedDict, i.e. dict with string keys and per-key typing, see https://peps.python.org/pep-0589/"""
+
+    fields: dict[str, LearntType]
