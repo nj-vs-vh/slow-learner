@@ -25,12 +25,19 @@ def is_subtype(maybe_sub: LearntType, maybe_super: LearntType) -> bool:
                 is_subtype_or_equal(sub_item_type, super_item_type)
                 for sub_item_type, super_item_type in zip(maybe_sub.item_types, maybe_super.item_types)
             )
-        # collections and mappings are potentially invariant generics and therefore treated as not-subtypeable
+        # collections and mappings are potentially invariant generics and can be subtyped only by top-level type
+        # e.g. MyListSubclass[int] is a subtype of list[int], but list[int] is not a subtype of list[float]
         # see https://mypy.readthedocs.io/en/stable/generics.html#variance-of-generic-types
         if isinstance(maybe_sub, LCollection) and isinstance(maybe_super, LCollection):
-            return False
+            return maybe_sub.item_type == maybe_super.item_type and issubclass(
+                maybe_sub.collection_type, maybe_super.collection_type
+            )
         if isinstance(maybe_sub, LMapping) and isinstance(maybe_super, LMapping):
-            return False
+            return (
+                maybe_sub.key_type == maybe_super.value_type
+                and maybe_sub.key_type == maybe_super.value_type
+                and issubclass(maybe_sub.mapping_type, maybe_super.mapping_type)
+            )
         if isinstance(maybe_sub, LTypedDict) and isinstance(maybe_super, LTypedDict):
             for super_key, super_value_type in maybe_super.fields.items():
                 if not (
