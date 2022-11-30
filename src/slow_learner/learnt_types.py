@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 from collections.abc import Collection
 from dataclasses import dataclass
 from typing import Any, Type
@@ -10,7 +10,7 @@ class LearntType(ABC):
 
 @dataclass(frozen=True)
 class LLiteral(LearntType):
-    """Literal type with a single possible value; See https://peps.python.org/pep-0586/ for details"""
+    """Literal with a single possible value; see https://peps.python.org/pep-0586/ for details"""
 
     value: Any
 
@@ -20,6 +20,8 @@ class LLiteral(LearntType):
 
 @dataclass(frozen=True)
 class LNone(LearntType):
+    """Literal None, separated from LLiteral for cleaner learning"""
+
     def __str__(self) -> str:
         return "None"
 

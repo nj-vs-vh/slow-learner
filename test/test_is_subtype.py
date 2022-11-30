@@ -1,6 +1,6 @@
 import pytest
 
-from slow_learner.learnt_types import LearntType, LLiteral, LTuple, LType, LUnion
+from slow_learner.learnt_types import LCollection, LearntType, LLiteral, LTuple, LType, LUnion
 from slow_learner.subtyping import is_subtype
 
 
@@ -21,6 +21,10 @@ class CustomSub1(CustomBase):
 
 
 class CustomSub2(CustomBase):
+    pass
+
+
+class CustomList(list):
     pass
 
 
@@ -88,7 +92,20 @@ class CustomSub2(CustomBase):
             True,
             id="union's members are all subtypes of a simple type",
         ),
+        # collections
+        pytest.param(LCollection(list, LType(int)), LCollection(list, LType(float)), True),
+        pytest.param(LCollection(CustomList, LType(int)), LCollection(list, LType(int)), True),
+        pytest.param(LCollection(CustomList, LType(int)), LCollection(list, LType(float)), True),
+        pytest.param(LCollection(CustomList, LType(float)), LCollection(list, LType(int)), False),
+        pytest.param(
+            LCollection(list, LUnion([LLiteral(3), LLiteral("hi")])),
+            LCollection(list, LUnion([LType(int), LType(str)])),
+            True,
+        ),
+        pytest.param(LCollection(list, LUnion([LType(int), LType(str)])), LCollection(set, LType(int)), False),
     ],
 )
 def test_is_subtype(lt1: LearntType, lt2: LearntType, expected_result: bool):
     assert is_subtype(lt1, lt2) == expected_result
+    if expected_result:
+        assert not is_subtype(lt2, lt1)

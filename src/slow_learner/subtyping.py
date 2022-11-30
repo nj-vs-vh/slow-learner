@@ -1,6 +1,6 @@
 import logging
 
-from .learnt_types import LearntType, LLiteral, LTuple, LType, LUnion
+from .learnt_types import LCollection, LearntType, LLiteral, LTuple, LType, LUnion
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +27,11 @@ def is_subtype(maybe_sub: LearntType, maybe_super: LearntType) -> bool:
                 is_subtype_or_equal(sub_item_type, super_item_type)
                 for sub_item_type, super_item_type in zip(maybe_sub.item_types, maybe_super.item_types)
             )
+        if isinstance(maybe_sub, LCollection) and isinstance(maybe_super, LCollection):
+            return (
+                issubclass(maybe_sub.collection_type, maybe_super.collection_type)
+                or maybe_sub.collection_type == maybe_super.collection_type
+            ) and is_subtype_or_equal(maybe_sub.item_type, maybe_super.item_type)
         if isinstance(maybe_sub, LUnion):
             return all(is_subtype(member, maybe_super) for member in maybe_sub.member_types)
         if isinstance(maybe_super, LUnion):
