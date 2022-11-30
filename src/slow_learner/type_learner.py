@@ -1,5 +1,5 @@
 import collections.abc
-import functools
+import itertools
 import logging
 from enum import Enum
 from typing import Any, Optional, cast
@@ -147,6 +147,44 @@ class TypeLearner:
                         group_processor=generalize_same_type_collections,
                     )
                 )
+
+            # merging typed dicts in a union
+            if isinstance(lt, LUnion):
+
+                def merge_typed_dicts(lts: list[LearntType]) -> list[LearntType]:
+                    if not lts or not all(isinstance(lt, LTypedDict) for lt in lts):
+                        return lts
+                    union_typed_dicts = cast(list[LTypedDict], lts)
+                    return [
+                        LTypedDict(
+                            {
+                                k: self._simplify_learnt_type(
+                                    LUnion([ltd.fields.get(k, LMissingTypedDictKey()) for ltd in union_typed_dicts])
+                                )
+                                for k in itertools.chain.from_iterable(lt.fields.keys() for lt in union_typed_dicts)
+                            }
+                        )
+                    ]
+
+                lt = LUnion(
+                    member_types=group_and_process(
+                        lt.member_types,
+                        group_key=lambda lt: 1 if isinstance(lt, LTypedDict) else 0,
+                        group_processor=merge_typed_dicts,
+                    )
+                )
+
+            # demoting too large typed dict to a mapping
+            if isinstance(lt, LTypedDict) and len(lt.fields) > self.max_typed_dict_size:
+                union_value_type = self._simplify_learnt_type(LUnion(list(lt.fields.values())))
+                if isinstance(union_value_type, LUnion):
+                    union_value_type = LUnion(
+                        [vt for vt in union_value_type.member_types if vt != LMissingTypedDictKey()]
+                    )
+                lt = LMapping(mapping_type=dict, key_type=LType(str), value_type=union_value_type)
+
+            # TODO: merge mappings
+            # TODO: recurse into type fragments (union members, tuple, collection and mapping items)
 
             # simplifying trivial unions (Union[T] -> T)
             if isinstance(lt, LUnion):
