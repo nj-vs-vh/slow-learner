@@ -15,7 +15,13 @@ class LLiteral(LearntType):
     value: Any
 
     def __str__(self) -> str:
-        return f'Literal[{self.value!r}]'
+        return f"Literal[{self.value!r}]"
+
+
+@dataclass(frozen=True)
+class LNone(LearntType):
+    def __str__(self) -> str:
+        return "None"
 
 
 @dataclass(frozen=True)
@@ -44,7 +50,7 @@ class LUnion(LearntType):
             return True
 
     def __str__(self) -> str:
-        return ' | '.join(str(m) for m in self.member_types)
+        return " | ".join(str(m) for m in self.member_types)
 
 
 @dataclass(frozen=True)
@@ -54,7 +60,7 @@ class LTuple(LearntType):
     item_types: list[LearntType]
 
     def __str__(self) -> str:
-        return 'tuple[' + ', '.join(str(item_type) for item_type in self.item_types) + ']'
+        return "tuple[" + ", ".join(str(item_type) for item_type in self.item_types) + "]"
 
 
 @dataclass
@@ -65,4 +71,4 @@ class LCollection(LearntType):
     item_type: LearntType
 
     def __str__(self) -> str:
-        return f'{self.collection_type.__qualname__}[{self.item_type}]'
+        return f"{self.collection_type.__qualname__}[{self.item_type}]"

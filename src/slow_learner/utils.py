@@ -1,7 +1,6 @@
 import itertools
 from collections.abc import Collection
-from typing import TypeVar, Callable, Optional, Hashable, Iterable
-
+from typing import Callable, Hashable, Iterable, Optional, TypeVar
 
 ItemT = TypeVar("ItemT")
 
@@ -12,7 +11,7 @@ def group_and_process(
     group_processor: Callable[[list[ItemT]], list[ItemT]],
 ) -> list[ItemT]:
     """Wrapper around itertools.groupby that
-    
+
     - groups elements with non-None group_key value
     - applies group_processor func to each group
     - collects and returns processed groups and ungrouped elements

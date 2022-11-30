@@ -1,10 +1,10 @@
-import functools
 import collections.abc
+import functools
 import logging
 from enum import Enum
 from typing import Any, Optional, cast
 
-from .learnt_types import LearntType, LLiteral, LTuple, LType, LUnion, LCollection
+from .learnt_types import LCollection, LearntType, LLiteral, LNone, LTuple, LType, LUnion
 from .subtyping import is_subtype, is_subtype_or_equal
 from .utils import group_and_process
 
@@ -17,7 +17,9 @@ class TypeLearner:
         self.max_literal_type_size = max_literal_type_size
 
     def _learn_variable_type(self, var: Any) -> LearntType:
-        if isinstance(var, (int, str, bytes, bool, Enum)) or var is None:
+        if var is None:
+            return LNone()
+        if isinstance(var, (int, str, bytes, bool, Enum)):
             return LLiteral(value=var)
         if isinstance(var, tuple):
             return LTuple(item_types=[self._learn_variable_type(item) for item in var])
