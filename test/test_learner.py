@@ -6,7 +6,7 @@ import pytest
 from pytest import param
 
 from slow_learner import TypeLearner
-from slow_learner.learnt_types import LearntType, LLiteral, LNone, LTuple, LType, LUnion
+from slow_learner.learnt_types import LCollection, LearntType, LLiteral, LNone, LTuple, LType, LUnion
 
 
 @pytest.mark.parametrize(
@@ -45,7 +45,19 @@ from slow_learner.learnt_types import LearntType, LLiteral, LNone, LTuple, LType
             LUnion([LType(int), LTuple([LType(int), LType(str)]), LTuple([LLiteral(1), LLiteral(2), LType(str)])]),
             True,
         ),
-        param(),
+        param([[1, 2]], LCollection(list, LUnion([LLiteral(1), LLiteral(2)])), True),
+        param([list(range(10))], LCollection(list, LType(int)), True),
+        param([list(range(10)), [100], [200]], LCollection(list, LType(int)), True),
+        param(
+            [list(range(10)), ["hello"], ["world"]],
+            LCollection(list, LUnion([LType(int), LLiteral("hello"), LLiteral("world")])),
+            True,
+        ),
+        param(
+            [list(range(10)), ["hello"], ["world"], ["aaaa", 13.5, "bbb"], ["foo", "bar", "baz", True]],
+            LCollection(list, LUnion([LType(float), LType(str)])),
+            True,
+        ),
     ],
 )
 def test_type_learner(stream: list[Any], expected_learnt_type: LearntType, order_independent: bool):

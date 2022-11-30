@@ -11,7 +11,7 @@ def is_subtype(maybe_sub: LearntType, maybe_super: LearntType) -> bool:
     try:
         if isinstance(maybe_sub, LType) and isinstance(maybe_super, LType):
             # special cases in mypy, see https://github.com/python/typing/issues/48
-            num_type_tower = (int, float, complex)
+            num_type_tower = (bool, int, float, complex)
             try:
                 return num_type_tower.index(maybe_sub.type_) < num_type_tower.index(maybe_super.type_)
             except Exception:
