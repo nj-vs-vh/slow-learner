@@ -32,9 +32,9 @@ def is_subtype(maybe_sub: LearntType, maybe_super: LearntType) -> bool:
         if isinstance(maybe_sub, LMapping) and isinstance(maybe_super, LMapping):
             return False
         if isinstance(maybe_sub, LTypedDict) and isinstance(maybe_super, LTypedDict):
-            for sub_key, sub_value_type in maybe_sub.fields.items():
+            for super_key, super_value_type in maybe_super.fields.items():
                 if not (
-                    sub_key in maybe_super.fields and is_subtype_or_equal(sub_value_type, maybe_super.fields[sub_key])
+                    super_key in maybe_sub.fields and is_subtype_or_equal(maybe_sub.fields[super_key], super_value_type)
                 ):
                     return False
             else:

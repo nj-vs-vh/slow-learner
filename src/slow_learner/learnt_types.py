@@ -84,12 +84,16 @@ class LMapping(LearntType):
     key_type: LearntType
     value_type: LearntType
 
+    def __str__(self) -> str:
+        return f"{self.mapping_type.__qualname__}[{self.key_type}][{self.value_type}]"
+
 
 @dataclass
-class LTypedDictMissingKey(LearntType):
+class LMissingTypedDictKey(LearntType):
     """Special type only allowed as a possible value for LTypedDict to mark not required key"""
 
-    pass
+    def __str__(self) -> str:
+        return "<missing>"
 
 
 @dataclass
@@ -97,3 +101,6 @@ class LTypedDict(LearntType):
     """TypedDict, i.e. dict with string keys and per-key typing, see https://peps.python.org/pep-0589/"""
 
     fields: dict[str, LearntType]
+
+    def __str__(self) -> str:
+        return f"TypedDict({self.fields})"

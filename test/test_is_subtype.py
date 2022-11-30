@@ -1,6 +1,15 @@
 import pytest
 
-from slow_learner.learnt_types import LCollection, LearntType, LLiteral, LTuple, LType, LUnion
+from slow_learner.learnt_types import (
+    LCollection,
+    LearntType,
+    LLiteral,
+    LTuple,
+    LType,
+    LUnion,
+    LTypedDict,
+    LMissingTypedDictKey,
+)
 from slow_learner.subtyping import is_subtype
 
 
@@ -129,6 +138,23 @@ class CustomList(list):
             False,
             id="collections are never subtyped due to invariance",
         ),
+        # typed dicts
+        pytest.param(LTypedDict({"foo": LType(int)}), LTypedDict({"foo": LType(float)}), True),
+        pytest.param(
+            LTypedDict({"foo": LType(int), "bar": LLiteral("hello")}),
+            LTypedDict({"foo": LType(float)}),
+            True,
+        ),
+        pytest.param(
+            LTypedDict({"foo": LLiteral("hello"), "bar": LType(str)}),
+            LTypedDict({"foo": LType(str), "bar": LUnion([LType(str), LMissingTypedDictKey()])}),
+            True,
+        ),
+        pytest.param(
+            LTypedDict({"foo": LLiteral("hello")}),
+            LTypedDict({"foo": LLiteral("hello"), "bar": LType(int)}),
+            False,
+        )
     ],
 )
 def test_is_subtype(lt1: LearntType, lt2: LearntType, expected_result: bool):
