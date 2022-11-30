@@ -30,7 +30,9 @@ class CustomSub2(CustomBase):
         # simple types and literals
         pytest.param(LType(CustomStr), LType(str), True, id="subclass => is subtype"),
         pytest.param(LType(int), LLiteral(1312), False),
-        pytest.param(LType(int), LType(float), False),
+        pytest.param(LType(int), LType(float), True, id="special case in mypy"),
+        pytest.param(LType(int), LType(complex), True, id="special case in mypy"),
+        pytest.param(LType(float), LType(complex), True, id="special case in mypy"),
         pytest.param(LLiteral("hello"), LType(str), True, id="literal instance => is subtype"),
         # tuples
         pytest.param(
