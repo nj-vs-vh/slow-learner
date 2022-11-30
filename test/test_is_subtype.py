@@ -4,11 +4,11 @@ from slow_learner.learnt_types import (
     LCollection,
     LearntType,
     LLiteral,
+    LMissingTypedDictKey,
     LTuple,
     LType,
-    LUnion,
     LTypedDict,
-    LMissingTypedDictKey,
+    LUnion,
 )
 from slow_learner.subtyping import is_subtype
 
