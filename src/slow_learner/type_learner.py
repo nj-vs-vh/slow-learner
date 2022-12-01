@@ -193,25 +193,27 @@ class TypeLearner:
                 )
 
             # demoting typed dicts to mappings if they are too large or if there are already regular mappings
+            def demote_typed_dict_to_mapping(lt: LearntType) -> LearntType:
+                if not isinstance(lt, LTypedDict):
+                    return lt
+                else:
+                    union_value_type = self._simplify_learnt_type(LUnion(list(lt.fields.values())))
+                    if isinstance(union_value_type, LUnion):
+                        union_value_type = LUnion(
+                            [vt for vt in union_value_type.member_types if vt != LMissingTypedDictKey()]
+                        )
+                    return LMapping(mapping_type=dict, key_type=LType(str), value_type=union_value_type)
+
             if isinstance(lt, LUnion):
-
-                def demote_typed_dict_to_mapping(lt: LearntType) -> LearntType:
-                    if not isinstance(lt, LTypedDict):
-                        return lt
-                    else:
-                        union_value_type = self._simplify_learnt_type(LUnion(list(lt.fields.values())))
-                        if isinstance(union_value_type, LUnion):
-                            union_value_type = LUnion(
-                                [vt for vt in union_value_type.member_types if vt != LMissingTypedDictKey()]
-                            )
-                        return LMapping(mapping_type=dict, key_type=LType(str), value_type=union_value_type)
-
                 if any(
                     isinstance(member, LMapping)
                     or (isinstance(member, LTypedDict) and len(member.fields) > self.max_typed_dict_size)
                     for member in lt.member_types
                 ):
                     lt = LUnion([demote_typed_dict_to_mapping(member) for member in lt.member_types])
+
+            if isinstance(lt, LTypedDict) and len(lt.fields) > self.max_typed_dict_size:
+                lt = demote_typed_dict_to_mapping(lt)
 
             # merging mappings in a union
             if isinstance(lt, LUnion):
