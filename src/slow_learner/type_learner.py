@@ -45,7 +45,7 @@ class TypeLearner:
                 return LLiteral(var)
             else:
                 return LType(type(var))
-        
+
         # parametrized types learning with recursion
         if recursion_depth > self.max_recursive_type_depth:
             return LType(type(var))
