@@ -85,7 +85,7 @@ class LMapping(LearntType):
     value_type: LearntType
 
     def __str__(self) -> str:
-        return f"{self.mapping_type.__qualname__}[{self.key_type}][{self.value_type}]"
+        return f"{self.mapping_type.__qualname__}[{self.key_type}, {self.value_type}]"
 
 
 @dataclass
@@ -103,4 +103,5 @@ class LTypedDict(LearntType):
     fields: dict[str, LearntType]
 
     def __str__(self) -> str:
-        return f"TypedDict({self.fields})"
+        body_str = ", ".join('"' + key_name + '": ' + str(value_type) for key_name, value_type in self.fields.items())
+        return f"TypedDict({{{body_str}}})"

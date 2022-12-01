@@ -1,12 +1,20 @@
 from slow_learner import TypeLearner
 
-tl = TypeLearner(max_literal_type_size=2)
+tl = TypeLearner(max_literal_type_size=0)
 
-# tl.observe([1])
-# tl.observe([1, 1, 1, 1, 1])
-# tl.observe([1, 2, 3, 4, 5])
-tl.observe({3.14, 1, 2})
-# tl.observe([1, 'world'])
-# tl.observe(['hello'])
 
+tl.observe(
+    {
+        "context": {"text": "hello", "from": "en", "to": "ru"},
+        "service": {},
+    }
+)
+print(tl.learnt_type)
+
+tl.observe(
+    {
+        "context": {"text": ["one", "two", "three"], "to": "zh"},
+        "service": {"provider": "someone"},
+    }
+)
 print(tl.learnt_type)
