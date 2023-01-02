@@ -109,6 +109,15 @@ class TypeLearner:
                         dedup_member_types.append(member)
                 lt = LUnion(dedup_member_types)
 
+            # replacing exhaustive bool literal union with bool type (Union[Literal[True], Literal[False], ...] -> Union[bool, ...])
+            if isinstance(lt, LUnion):
+                literal_true = LLiteral(True)
+                literal_false = LLiteral(False)
+                if literal_true in lt.member_types and literal_false in lt.member_types:
+                    lt = LUnion(
+                        [m for m in lt.member_types if m != literal_true and m != literal_false] + [LType(bool)]
+                    )
+
             # generalizing too large unions of literals (Literal[1, 2, 3, ...] => int)
             if isinstance(lt, LUnion):
                 literal_members: list[LLiteral] = []

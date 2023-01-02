@@ -33,6 +33,9 @@ from slow_learner.learnt_types import (
         param(["a", *range(100)], LUnion([LType(int), LType(str)]), False),
         param([*range(100), "a"], LUnion([LType(int), LLiteral("a")]), False),
         param([*range(100), *string.ascii_letters], LUnion([LType(int), LType(str)]), True),
+        param([True, False], LType(bool), True),
+        param([True, False, *range(100)], LType(int), True),
+        param([True, False, *string.ascii_letters], LUnion([LType(bool), LType(str)]), True),
         # tuples
         param([(1, "a")], LTuple([LLiteral(1), LLiteral("a")]), True),
         param(
