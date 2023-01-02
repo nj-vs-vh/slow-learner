@@ -41,9 +41,8 @@ def new_type_name(name: str, dependency_typedefs: dict[str, str]) -> str:
         name = "GeneratedType"
     if name not in dependency_typedefs:
         return name
-    name += "_"
     while True:
-        name += random.choice(string.ascii_letters)
+        name += random.choice(string.ascii_uppercase)
         if name not in dependency_typedefs:
             return name
 

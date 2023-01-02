@@ -19,7 +19,7 @@ from .learnt_types import (
     LUnion,
 )
 from .subtyping import is_subtype, is_subtype_or_equal
-from .typedef_generation import PythonVersion, generate_typedef_rhs
+from .typedef_generation import PythonVersion, generate_typedef_rhs, new_type_name
 from .utils import group_and_process, to_json_path
 
 logger = logging.getLogger(__name__)
@@ -296,6 +296,7 @@ class TypeLearner:
     def generate_type_definitions(
         self, filename: pathlib.Path, type_name: str, doc: str, target_version: PythonVersion = PythonVersion.PY38
     ):
+        type_name = new_type_name(type_name, {})
         if self.learnt_type is None:
             raise RuntimeError("Unable to generate type definition before at least one value is observed")
         if filename.exists():
