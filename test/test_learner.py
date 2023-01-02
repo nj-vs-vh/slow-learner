@@ -1,6 +1,9 @@
+import pathlib
+import subprocess
 import random
 import string
 from typing import Any
+import uuid
 
 import pytest
 from pytest import param
@@ -10,13 +13,13 @@ from slow_learner.learnt_types import (
     LCollection,
     LearntType,
     LLiteral,
+    LMapping,
+    LMissingTypedDictKey,
     LNone,
     LTuple,
     LType,
-    LUnion,
-    LMapping,
     LTypedDict,
-    LMissingTypedDictKey,
+    LUnion,
 )
 
 
@@ -26,7 +29,7 @@ from slow_learner.learnt_types import (
         # literals and simple types
         param([1, 2, 3], LUnion([LLiteral(1), LLiteral(2), LLiteral(3)]), True),
         param(list(range(100)), LType(int), True),
-        param(list(range(100)) + [None], LUnion([LType(int), LNone()]), True, id="None is not absorbed into literal"),
+        param(list(range(100)) + [None], LUnion([LType(int), LNone()]), True),
         param(["a", *range(100)], LUnion([LType(int), LType(str)]), False),
         param([*range(100), "a"], LUnion([LType(int), LLiteral("a")]), False),
         param([*range(100), *string.ascii_letters], LUnion([LType(int), LType(str)]), True),
@@ -72,7 +75,7 @@ from slow_learner.learnt_types import (
         ),
         param(
             [[], [], [], []],
-            LCollection(list, LNone()),
+            LCollection(list, LUnion([])),
             True,
         ),
         # typed dicts
@@ -132,12 +135,14 @@ from slow_learner.learnt_types import (
             LMapping(dict, LUnion([LType(str), LType(int)]), LUnion([LLiteral(2), LLiteral(4)])),
             True,
         ),
-        # param(
-        # [[{'aaa': ([2], [4], [])}]],
-        # )
     ],
 )
-def test_type_learner_basic(stream: list[Any], expected_learnt_type: LearntType, order_independent: bool):
+def test_type_learner_basic(
+    stream: list[Any],
+    expected_learnt_type: LearntType,
+    order_independent: bool,
+    tmp_path: pathlib.Path,
+):
     random.seed(1312)
     for _ in range(5):
         tl = TypeLearner(
@@ -149,6 +154,26 @@ def test_type_learner_basic(stream: list[Any], expected_learnt_type: LearntType,
         for value in stream:
             tl.observe(value)
         assert tl.learnt_type == expected_learnt_type
+
+        type_name = "TestType"
+
+        typedef_file = tmp_path / f"{uuid.uuid4().hex}.py"
+        tl.generate_type_definitions(typedef_file, type_name, doc="testing type generation")
+        
+        assert typedef_file.exists()
+
+        # validating that a valid Python module is generated
+        res = subprocess.run(["python", str(typedef_file)], capture_output=True)
+        assert res.returncode == 0, f"Generated file does not contain a valid Python code: {res.stderr.decode()}"
+
+        # validating that the generated type does indeed contain all of the samples
+        typedef_text = typedef_file.read_text()
+        typedef_text += f"\n\ndef func(arg: {type_name}) -> None:\n    pass\n\n"
+        for value in stream:
+            typedef_text += f"func({value!r})\n"
+        typedef_file.write_text(typedef_text)
+        res = subprocess.run(["mypy", "--strict", str(typedef_file)], capture_output=True)
+        assert res.returncode == 0, f"Mypy finds errors: {res.stdout.decode()}"
 
         if not order_independent:
             break

@@ -52,7 +52,10 @@ class LUnion(LearntType):
             return True
 
     def __str__(self) -> str:
-        return " | ".join(str(m) for m in self.member_types)
+        if self.member_types:
+            return " | ".join(str(m) for m in self.member_types)
+        else:
+            return "<empty union type>"
 
 
 @dataclass(frozen=True)
