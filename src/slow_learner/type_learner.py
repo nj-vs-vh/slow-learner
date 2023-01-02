@@ -4,7 +4,8 @@ import logging
 import pathlib
 import re
 from enum import Enum
-from typing import Any, Optional, Union, cast
+from functools import reduce
+from typing import Any, Iterable, Optional, Union, cast
 
 from .learnt_types import (
     LCollection,
@@ -68,32 +69,38 @@ class TypeLearner:
                 item_types=[self._learn_variable_type(item, _path=path + [index]) for index, item in enumerate(var)]
             )
         if isinstance(var, collections.abc.Mapping):
-            value_type_by_key: dict[Any, LearntType] = {
+            learnt_value_type_by_key: dict[Any, LearntType] = {
                 k: self._learn_variable_type(v, _path=path + [k]) for k, v in var.items()
             }
-            key_types = [self._learn_variable_type(k, _path=path + [k]) for k in value_type_by_key.keys()]
+            learnt_key_types = [self._learn_variable_type(k, _path=path + [k]) for k in learnt_value_type_by_key.keys()]
             if (
                 self.learn_typed_dicts
                 and isinstance(var, dict)
-                and all(is_subtype_or_equal(kt, LType(str)) for kt in key_types)
+                and all(is_subtype_or_equal(kt, LType(str)) for kt in learnt_key_types)
             ):
-                return LTypedDict(value_type_by_key)
+                return LTypedDict(learnt_value_type_by_key)
             else:
                 return LMapping(
                     mapping_type=type(var),
-                    key_type=self._simplify_learnt_type(LUnion(key_types)),
-                    value_type=self._simplify_learnt_type(LUnion(list(value_type_by_key.values()))),
+                    key_type=self._reduce_simplifying(learnt_key_types),
+                    value_type=self._reduce_simplifying(learnt_value_type_by_key.values()),
                 )
         if isinstance(var, collections.abc.Collection):
+            learnt_item_types = [
+                self._learn_variable_type(item, _path=path + [index]) for index, item in enumerate(var)
+            ]
             return LCollection(
                 type(var),
-                self._simplify_learnt_type(
-                    LUnion([self._learn_variable_type(item, _path=path + [index]) for index, item in enumerate(var)])
-                ),
+                item_type=self._reduce_simplifying(learnt_item_types),
             )
 
         # opaque type as a fallback
         return LType(type_=type(var))
+
+    def _reduce_simplifying(self, lts: Iterable[LearntType]) -> LearntType:
+        if not lts:
+            return LUnion([])
+        return reduce(lambda lt1, lt2: self._simplify_learnt_type(LUnion([lt1, lt2])), lts)
 
     def _simplify_learnt_type(self, lt: LearntType) -> LearntType:
         lt_prev = lt
