@@ -7,4 +7,5 @@ setup(
     description="Learning Python type hints from a stream of data",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
+    python_requires=">=3.9",
 )

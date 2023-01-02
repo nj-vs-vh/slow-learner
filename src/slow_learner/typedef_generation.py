@@ -60,7 +60,7 @@ def generate_typedef_rhs(
             return "Any"
         non_none_member_types = [m for m in lt.member_types if not isinstance(m, LNone)]
         if not non_none_member_types:
-            raise RuntimeError(f"Union type {lt} does not have any non-None member types")
+            return str(LNone())
         member_types_in_body = lt.member_types if target_version >= PythonVersion.PY310 else non_none_member_types
         member_typedefs_in_body = [
             generate_typedef_rhs(
