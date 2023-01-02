@@ -1,9 +1,9 @@
 import pathlib
-import subprocess
 import random
 import string
-from typing import Any
+import subprocess
 import uuid
+from typing import Any
 
 import pytest
 from pytest import param
@@ -159,7 +159,7 @@ def test_type_learner_basic(
 
         typedef_file = tmp_path / f"{uuid.uuid4().hex}.py"
         tl.generate_type_definitions(typedef_file, type_name, doc="testing type generation")
-        
+
         assert typedef_file.exists()
 
         # validating that a valid Python module is generated
