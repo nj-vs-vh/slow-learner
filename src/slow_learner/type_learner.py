@@ -29,6 +29,7 @@ class TypeLearner:
     def __init__(
         self,
         max_literal_type_size: int = 10,
+        max_literal_string_length: int = 512,
         learn_typed_dicts: bool = True,
         max_typed_dict_size: int = 100,
         max_recursive_type_depth: int = 10,
@@ -37,6 +38,7 @@ class TypeLearner:
         self.learnt_type: Optional[LearntType] = None
         self.observed_values = 0
         self.max_literal_type_size = max_literal_type_size
+        self.max_literl_string_length = max_literal_string_length
         self.max_typed_dict_size = max_typed_dict_size
         self.learn_typed_dicts = learn_typed_dicts
         self.max_recursive_type_depth = max_recursive_type_depth
@@ -49,8 +51,10 @@ class TypeLearner:
             return LNone()
         if isinstance(var, (int, str, bytes, bool, Enum)):
             json_path = to_json_path(path)
-            if self.max_literal_type_size > 0 and not any(
-                no_literal_pattern.match(json_path) for no_literal_pattern in self.no_literal_patterns
+            if (
+                self.max_literal_type_size > 0
+                and not any(no_literal_pattern.match(json_path) for no_literal_pattern in self.no_literal_patterns)
+                and not (isinstance(var, str) and len(var) > self.max_literl_string_length)
             ):
                 return LLiteral(var)
             else:

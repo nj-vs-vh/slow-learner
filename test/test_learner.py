@@ -179,6 +179,11 @@ from slow_learner.learnt_types import (
             ),
             True,
         ),
+        param(
+            ["short", "long" * 1024],
+            LType(str),
+            True,
+        ),
     ],
 )
 def test_type_learner_basic(
