@@ -1,8 +1,9 @@
 import collections
 import keyword
 import random
+import re
 import string
-from enum import Enum, IntEnum
+from enum import IntEnum
 
 from .learnt_types import (
     LCollection,
@@ -25,14 +26,26 @@ class PythonVersion(IntEnum):
     PY311 = 11
 
 
-def new_type_name(start: str, dependency_typedefs: dict[str, str]) -> str:
-    if start not in dependency_typedefs:
-        return start
-    start += "_"
+def capitalize_first_letter(s: str) -> str:
+    if s:
+        return s[0].capitalize() + s[1:]
+    else:
+        return s
+
+
+def new_type_name(name: str, dependency_typedefs: dict[str, str]) -> str:
+    name = "".join([capitalize_first_letter(m.group()) for m in re.finditer(r"[A-Za-z0-9]+", name)])
+    if not name.isidentifier():
+        name = "_" + name
+    if not name.isidentifier():
+        name = "GeneratedType"
+    if name not in dependency_typedefs:
+        return name
+    name += "_"
     while True:
-        start += random.choice(string.ascii_letters)
-        if start not in dependency_typedefs:
-            return start
+        name += random.choice(string.ascii_letters)
+        if name not in dependency_typedefs:
+            return name
 
 
 def generate_typedef_rhs(
@@ -62,16 +75,27 @@ def generate_typedef_rhs(
         if not non_none_member_types:
             return str(LNone())
         member_types_in_body = lt.member_types if target_version >= PythonVersion.PY310 else non_none_member_types
-        member_typedefs_in_body = [
-            generate_typedef_rhs(
-                member_lt,
-                new_type_name(type_name + f"Variant{member_idx + 1}", dependency_typedefs),
-                target_version,
-                imports,
-                dependency_typedefs,
-            )
-            for member_idx, member_lt in enumerate(member_types_in_body)
-        ]
+        if len(member_types_in_body) > 1:
+            member_typedefs_in_body = [
+                generate_typedef_rhs(
+                    member_lt,
+                    new_type_name(type_name + f"Variant{member_idx + 1}", dependency_typedefs),
+                    target_version,
+                    imports,
+                    dependency_typedefs,
+                )
+                for member_idx, member_lt in enumerate(member_types_in_body)
+            ]
+        else:
+            member_typedefs_in_body = [
+                generate_typedef_rhs(
+                    member_types_in_body[0],
+                    new_type_name(type_name, dependency_typedefs),
+                    target_version,
+                    imports,
+                    dependency_typedefs,
+                )
+            ]
         if target_version >= PythonVersion.PY310:
             union_body = " | ".join(member_typedefs_in_body)
         else:
@@ -197,7 +221,7 @@ def generate_typedef_rhs(
         for key, value_lt in field_types_to_generate.items():
             value_typedef = generate_typedef_rhs(
                 value_lt,
-                new_type_name(type_name + key.capitalize(), dependency_typedefs),
+                new_type_name(type_name + (key.capitalize() or "EmptyKey"), dependency_typedefs),
                 target_version,
                 imports,
                 dependency_typedefs,

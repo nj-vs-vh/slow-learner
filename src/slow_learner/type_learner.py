@@ -2,8 +2,9 @@ import collections.abc
 import itertools
 import logging
 import pathlib
+import re
 from enum import Enum
-from typing import Any, Optional, cast
+from typing import Any, Optional, Union, cast
 
 from .learnt_types import (
     LCollection,
@@ -19,7 +20,7 @@ from .learnt_types import (
 )
 from .subtyping import is_subtype, is_subtype_or_equal
 from .typedef_generation import PythonVersion, generate_typedef_rhs
-from .utils import group_and_process
+from .utils import group_and_process, to_json_path
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +32,7 @@ class TypeLearner:
         learn_typed_dicts: bool = True,
         max_typed_dict_size: int = 100,
         max_recursive_type_depth: int = 10,
+        no_literal_patterns: Optional[list[str]] = None,
     ) -> None:
         self.learnt_type: Optional[LearntType] = None
         self.observed_values = 0
@@ -38,31 +40,34 @@ class TypeLearner:
         self.max_typed_dict_size = max_typed_dict_size
         self.learn_typed_dicts = learn_typed_dicts
         self.max_recursive_type_depth = max_recursive_type_depth
+        self.no_literal_patterns = [re.compile(patt) for patt in no_literal_patterns or []]
 
-    def _learn_variable_type(self, var: Any, recursion_depth: int = 0) -> LearntType:
+    def _learn_variable_type(self, var: Any, _path: Optional[list[Union[str, int]]] = None) -> LearntType:
+        path = _path or []
         # simple basic types learning
         if var is None:
             return LNone()
         if isinstance(var, (int, str, bytes, bool, Enum)):
-            if self.max_literal_type_size > 0:
+            json_path = to_json_path(path)
+            if self.max_literal_type_size > 0 and not any(
+                no_literal_pattern.match(json_path) for no_literal_pattern in self.no_literal_patterns
+            ):
                 return LLiteral(var)
             else:
                 return LType(type(var))
 
         # parametrized types learning with recursion
-        if recursion_depth > self.max_recursive_type_depth:
+        if len(path) > self.max_recursive_type_depth:
             return LType(type(var))
         if isinstance(var, tuple):
             return LTuple(
-                item_types=[self._learn_variable_type(item, recursion_depth=recursion_depth + 1) for item in var]
+                item_types=[self._learn_variable_type(item, _path=path + [index]) for index, item in enumerate(var)]
             )
         if isinstance(var, collections.abc.Mapping):
             value_type_by_key: dict[Any, LearntType] = {
-                k: self._learn_variable_type(v, recursion_depth=recursion_depth + 1) for k, v in var.items()
+                k: self._learn_variable_type(v, _path=path + [k]) for k, v in var.items()
             }
-            key_types = [
-                self._learn_variable_type(k, recursion_depth=recursion_depth + 1) for k in value_type_by_key.keys()
-            ]
+            key_types = [self._learn_variable_type(k, _path=path + [k]) for k in value_type_by_key.keys()]
             if (
                 self.learn_typed_dicts
                 and isinstance(var, dict)
@@ -79,7 +84,7 @@ class TypeLearner:
             return LCollection(
                 type(var),
                 self._simplify_learnt_type(
-                    LUnion([self._learn_variable_type(item, recursion_depth=recursion_depth + 1) for item in var])
+                    LUnion([self._learn_variable_type(item, _path=path + [index]) for index, item in enumerate(var)])
                 ),
             )
 

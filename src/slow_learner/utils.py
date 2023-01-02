@@ -1,6 +1,6 @@
 import itertools
 from collections.abc import Collection
-from typing import Callable, Hashable, Iterable, Optional, TypeVar
+from typing import Callable, Hashable, Iterable, Optional, TypeVar, Union
 
 ItemT = TypeVar("ItemT")
 
@@ -28,3 +28,7 @@ def group_and_process(
         else:
             result.extend(group_processor(list(group)))
     return result
+
+
+def to_json_path(path_parts: list[Union[str, int]]) -> str:
+    return "".join(["." + p if isinstance(p, str) else f"[{p}]" for p in path_parts if isinstance(p, (int, str))])

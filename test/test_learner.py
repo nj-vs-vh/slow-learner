@@ -98,6 +98,33 @@ from slow_learner.learnt_types import (
             True,
         ),
         param(
+            [
+                {"weird keys with spaces": {"and nested structure": None, "": {"one": 1}}, "": {"two": 2}},
+                {"1234": {"hello": "world"}},
+            ],
+            LTypedDict(
+                {
+                    "weird keys with spaces": LUnion(
+                        member_types=[
+                            LMissingTypedDictKey(),
+                            LTypedDict(
+                                fields={
+                                    "and nested structure": LNone(),
+                                    "": LTypedDict(fields={"one": LLiteral(value=1)}),
+                                }
+                            ),
+                        ]
+                    ),
+                    "": LUnion(member_types=[LMissingTypedDictKey(), LTypedDict(fields={"two": LLiteral(value=2)})]),
+                    "1234": LUnion(
+                        member_types=[LMissingTypedDictKey(), LTypedDict(fields={"hello": LLiteral(value="world")})]
+                    ),
+                }
+            ),
+            True,
+            id="nested typed dicts with weird names",
+        ),
+        param(
             [{"nested": {"list": [s, s * 2, s * 3]}, "literal": 1312} for s in string.ascii_letters * 10],
             LTypedDict({"nested": LTypedDict({"list": LCollection(list, LType(str))}), "literal": LLiteral(1312)}),
             True,
@@ -138,6 +165,20 @@ from slow_learner.learnt_types import (
             LMapping(dict, LUnion([LType(str), LType(int)]), LUnion([LLiteral(2), LLiteral(4)])),
             True,
         ),
+        param(
+            [
+                {"value": i, "another": {"nested": "dict", "secret-value": "vvvvvv"}, "password": "qwerty"}
+                for i in range(100)
+            ],
+            LTypedDict(
+                {
+                    "value": LType(int),
+                    "another": LTypedDict({"nested": LLiteral("dict"), "secret-value": LType(str)}),
+                    "password": LType(str),
+                }
+            ),
+            True,
+        ),
     ],
 )
 def test_type_learner_basic(
@@ -153,6 +194,7 @@ def test_type_learner_basic(
             learn_typed_dicts=True,
             max_typed_dict_size=5,
             max_recursive_type_depth=3,
+            no_literal_patterns=[r"\.password", r".*secret"],
         )
         for value in stream:
             tl.observe(value)
