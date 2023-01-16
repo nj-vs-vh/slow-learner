@@ -8,4 +8,10 @@ setup(
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     python_requires=">=3.9",
+    install_requires=[
+        "click~=8.1",
+    ],
+    entry_points={
+        'console_scripts': ['slow-learner=slow_learner.cli:cli'],
+    },
 )

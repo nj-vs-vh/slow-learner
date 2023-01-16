@@ -208,7 +208,7 @@ def test_type_learner_basic(
         type_name = "TestType"
 
         typedef_file = tmp_path / f"{uuid.uuid4().hex}.py"
-        tl.generate_type_definitions(typedef_file, type_name, doc="testing type generation")
+        tl.save_type_definition(typedef_file, type_name, doc="testing type generation")
 
         assert typedef_file.exists()
 

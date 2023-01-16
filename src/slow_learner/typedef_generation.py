@@ -3,6 +3,7 @@ import keyword
 import random
 import re
 import string
+import sys
 from enum import IntEnum
 
 from .learnt_types import (
@@ -24,6 +25,13 @@ class PythonVersion(IntEnum):
     PY39 = 9
     PY310 = 10
     PY311 = 11
+
+    @classmethod
+    def current(cls) -> "PythonVersion":
+        return PythonVersion(sys.version_info.minor)
+
+    def __str__(self) -> str:
+        return f"Python 3.{self.value}"
 
 
 def capitalize_first_letter(s: str) -> str:
