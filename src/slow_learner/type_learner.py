@@ -300,7 +300,9 @@ class TypeLearner:
         self.learnt_type = self._simplify_learnt_type(self.learnt_type)
         self.observed_values += 1
 
-    def generate_type_definition(self, type_name: str, doc: str, target_version: PythonVersion = PythonVersion.PY38) -> str:
+    def generate_type_definition(
+        self, type_name: str, doc: str, target_version: PythonVersion = PythonVersion.PY38
+    ) -> str:
         type_name = new_type_name(type_name, {})
         if self.learnt_type is None:
             raise RuntimeError("Unable to generate type definition before at least one value is observed")
