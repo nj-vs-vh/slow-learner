@@ -14,11 +14,24 @@ def cli():
 
 
 @cli.command()
-@click.argument("inputs", nargs=-1, required=True, type=click.Path(exists=True, readable=True))
-@click.option("--output-file", default=None)
-@click.option("--type-name", default="LearntType")
+@click.argument(
+    "inputs",
+    nargs=-1,
+    required=True,
+    type=click.Path(exists=True, readable=True),
+)
+@click.option("--output-file", default=None, help="File to write generated type declarations")
+@click.option("--type-name", default="LearntType", help="Generated type's name")
+@click.option(
+    "--spread",
+    default=False,
+    is_flag=True,
+    help="If set, each input file is expected to contain a JSON list, and the type of it's items is learned",
+)
 @click.option("--max-literal-type-size", default=5, type=int)
-def learn(inputs: list[str], output_file: Optional[str], type_name: str, max_literal_type_size: int) -> None:
+def learn(
+    inputs: list[str], output_file: Optional[str], type_name: str, max_literal_type_size: int, spread: bool
+) -> None:
     output_path = pathlib.Path(output_file or type_name + ".py")
     if output_path.exists():
         click.secho(f"File already exists: {output_path.resolve()}", fg="red")
@@ -31,11 +44,24 @@ def learn(inputs: list[str], output_file: Optional[str], type_name: str, max_lit
         return
 
     tl = TypeLearner(max_literal_type_size=max_literal_type_size)
-    for input_path in tqdm(input_paths):
-        try:
-            tl.observe(json.loads(input_path.read_text()))
-        except Exception as e:
-            click.secho(f"Error parsing data from {input_path}, ignoring: {e!r}", fg="red")
+    with tqdm() as progress_bar:
+        for input_path in input_paths:
+            try:
+                data = json.loads(input_path.read_text())
+                if spread:
+                    assert isinstance(data, list)
+                    items = data
+                else:
+                    items = [data]
+                for idx, item in enumerate(items):
+                    try:
+                        tl.observe(item)
+                    except Exception as e:
+                        click.secho(f"Error parsing item #{idx}, ignoring: {e!r}", fg="red")
+                    finally:
+                        progress_bar.update()
+            except Exception as e:
+                click.secho(f"Error parsing data from {input_path}, ignoring: {e!r}", fg="red")
 
     paths_in_doc = 10
     doc = f"Source JSON files:\n" + "\n".join(
