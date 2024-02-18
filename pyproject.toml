@@ -23,7 +23,8 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://pypi.org/manage/project/slow-learner"
+Homepage = "https://nj-vs-vh.name/project/slow-learner"
+Repository = "https://github.com/nj-vs-vh/slow-learner"
 Issues = "https://github.com/nj-vs-vh/slow-learner/issues"
 
 [tool.black]
