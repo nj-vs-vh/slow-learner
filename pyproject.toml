@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "slow-learner"
-version = "0.1.0"
+version = "0.1.1"
 authors = [{ name = "Igor Vaiman", email = "gosha.vaiman@gmail.com" }]
 description = "Python type inference from a stream of data"
 readme = "README.md"
