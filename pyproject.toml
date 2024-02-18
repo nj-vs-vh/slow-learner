@@ -21,11 +21,20 @@ classifiers = [
     "Development Status :: 4 - Beta",
     "Environment :: Console",
 ]
+dependencies = [
+  "click~=8.1",
+  "tqdm>=4.0.0",
+]
 
 [project.urls]
 Homepage = "https://nj-vs-vh.name/project/slow-learner"
 Repository = "https://github.com/nj-vs-vh/slow-learner"
 Issues = "https://github.com/nj-vs-vh/slow-learner/issues"
+
+[project.scripts]
+slow-learner = "slow_learner.cli:cli"
+
+########################################################################
 
 [tool.black]
 line-length = 120
